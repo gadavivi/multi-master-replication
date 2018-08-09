@@ -45,28 +45,31 @@ class UpdateManager(object):
         self.second_master = second_master
         self.local_state = local_state
 
-    def update_remote(self, sleep):
+    def update_remote(self):
         ###   there are 3 option   ###
-        # 1. In a regular cae when a post has arrived, The service is trying to update the other master with his value.
-        # 2. one or two server got back up after an error, in this case because it is persistent
+        # 1. In a regular case when a post has arrived, The service is trying to update the other master with his value.
+        # 2. One or two server got back up after an error, in this case because it is persistent
         #   (local_state.timestamp != last_timestamp), So each master will try to update the other with his value.
         #    and the one with the earlier timestamp will get the update.
         # 3. There is a network error, it means that r.status_code != 200 so the live master will keep trying to update
         #    The other master.
+        if self.local_state.timestamp != self.last_timestamp:
+            r = requests.post('http://%s/api/resource?timestamp=%s' % (self.second_master,
+                                                                       repr(self.local_state.timestamp)),
+                              json=json.dumps(self.local_state.data))
+            if r.status_code == 200:
+                self.last_timestamp = self.local_state.timestamp
+
+    def update_remote_loop(self, sleep):
         while True:
-            if self.local_state.timestamp != self.last_timestamp:
-                try:
-                    r = requests.post('http://%s/api/resource?timestamp=%s' % (self.second_master,
-                                                                               repr(self.local_state.timestamp)),
-                                      json=json.dumps(self.local_state.data))
-                    if r.status_code == 200:
-                        self.last_timestamp = self.local_state.timestamp
-                except requests.ConnectionError:
-                    pass
+            try:
+                self.update_remote()
+            except requests.ConnectionError:
+                pass
             time.sleep(sleep)
 
     def run(self, sleep=1):
-        thread = threading.Thread(target=self.update_remote, args=(sleep,))
+        thread = threading.Thread(target=self.update_remote_loop, args=(sleep,))
         thread.start()
 
 
