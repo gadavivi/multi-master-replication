@@ -41,6 +41,7 @@ class StateManager(object):
 class UpdateManager(object):
     def __init__(self, local_state, second_master):
         self.last_timestamp = None
+        self.data_md5 = None
         self.second_master = second_master
         self.local_state = local_state
 
@@ -52,12 +53,13 @@ class UpdateManager(object):
         #    and the one with the earlier timestamp will get the update.
         # 3. There is a network error, it means that r.status_code != 200 so the live master will keep trying to update
         #    The other master.
-        if self.local_state.timestamp != self.last_timestamp:
+        if self.local_state.timestamp != self.last_timestamp or self.data_md5 != self.local_state.data_md5:
             r = requests.post('http://%s/api/resource?timestamp=%s' % (self.second_master,
                                                                        repr(self.local_state.timestamp)),
                               json=json.dumps(self.local_state.data))
             if r.status_code == 200:
                 self.last_timestamp = self.local_state.timestamp
+                self.data_md5 = self.local_state.data_md5
 
     def update_remote_loop(self, sleep):
         while True:

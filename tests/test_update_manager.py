@@ -28,3 +28,14 @@ def test_update_remote_nw_error(req_mock, update_manager, data, timestamp):
     with pytest.raises(requests.ConnectionError):
         update_manager.update_remote()
         assert update_manager.last_timestamp != update_manager.local_state.timestamp
+
+
+@mock.patch('requests.post')
+def test_update_remote_tie_timestamp_diff_data(req_mock, update_manager, data, timestamp):
+    req_mock.return_value.status_code = 200
+    update_manager.local_state.set_state(data, timestamp)
+    update_manager.last_timestamp = timestamp
+    update_manager.update_remote()
+
+    # check the regular state, when post arrives
+    assert update_manager.data_md5 == update_manager.local_state.data_md5
