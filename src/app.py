@@ -1,8 +1,13 @@
+import os
 from flask import Flask, request, jsonify
-from manager import state
+from manager import StateManager, UpdateManager
 import time
 
 app = Flask(__name__)
+
+state = StateManager(os.environ['JSON_PATH'])
+update_manger = UpdateManager(state, os.environ.get('SECOND_MASTER', 'localhost'))
+update_manger.run()
 
 
 @app.route('/api/resource', methods=['POST'])
@@ -17,4 +22,4 @@ def get():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80,debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)

@@ -1,7 +1,7 @@
+import os
 import json
 import threading
 import requests
-import os
 import time
 import hashlib
 
@@ -28,15 +28,14 @@ class StateManager(object):
 
     def set_state(self, data, timestamp):
         data_md5 = hashlib.md5(json.dumps(self.data)).hexdigest()
-        if self.timestamp is None or self.timestamp < timestamp or \
-                (self.timestamp == timestamp and data_md5 < self.data_md5):
-            self.lock.acquire()
-            self.timestamp = timestamp
-            self.data = data
-            self.write_json(data, timestamp)
-            self.lock.release()
-            self.data_md5 = data_md5
-        return self.data
+        with self.lock:
+            # If the timestamps are equal break the tie by taking the one with the smaller lexicography order.
+            if self.timestamp is None or self.timestamp < timestamp or \
+                    (self.timestamp == timestamp and data_md5 < self.data_md5):
+                self.timestamp = timestamp
+                self.data = data
+                self.write_json(data, timestamp)
+                self.data_md5 = data_md5
 
 
 class UpdateManager(object):
@@ -72,7 +71,3 @@ class UpdateManager(object):
         thread = threading.Thread(target=self.update_remote_loop, args=(sleep,))
         thread.start()
 
-
-state = StateManager(os.environ['JSON_PATH'])
-update_manger = UpdateManager(state, os.environ.get('SECOND_MASTER', 'localhost'))
-update_manger.run()
