@@ -41,7 +41,7 @@ class StateManager(object):
 class UpdateManager(object):
     def __init__(self, local_state, second_master):
         self.last_timestamp = None
-        self.data_md5 = None
+        self.data_md5 = hashlib.md5(json.dumps({})).hexdigest()
         self.second_master = second_master
         self.local_state = local_state
 
