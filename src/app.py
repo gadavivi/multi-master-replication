@@ -18,7 +18,7 @@ def update():
 
 @app.route('/api/resource', methods=['GET'])
 def get():
-    return jsonify(state.data), 200
+    return jsonify(state.data)
 
 
 if __name__ == "__main__":
