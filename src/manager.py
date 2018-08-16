@@ -56,7 +56,7 @@ class UpdateManager(object):
         if self.local_state.timestamp != self.last_timestamp or self.data_md5 != self.local_state.data_md5:
             r = requests.post('http://%s/api/resource?timestamp=%s' % (self.second_master,
                                                                        repr(self.local_state.timestamp)),
-                              json=json.dumps(self.local_state.data))
+                              json=self.local_state.data)
             if r.status_code == 200:
                 self.last_timestamp = self.local_state.timestamp
                 self.data_md5 = self.local_state.data_md5

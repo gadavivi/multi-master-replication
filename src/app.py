@@ -13,7 +13,7 @@ update_manger.run()
 @app.route('/api/resource', methods=['POST'])
 def update():
     state.set_state(request.json, float(request.args.get('timestamp', time.time())))
-    return jsonify({}), 200
+    return jsonify({})
 
 
 @app.route('/api/resource', methods=['GET'])
